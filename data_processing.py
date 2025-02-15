@@ -12,6 +12,20 @@ warnings.filterwarnings('ignore')
 def load_csv(uploaded_file) -> pd.DataFrame:
    return pd.read_csv(StringIO(uploaded_file.getvalue().decode("utf-8")))
 
+def extract_ingredients(all_chunks):
+    """Extracts unique ingredients from restaurant data."""
+    unique_ingredients = set()
+    for chunk in all_chunks:
+        if "ingredients" in chunk["metadata"]:
+            unique_ingredients.update(chunk["metadata"]["ingredients"].split(", "))
+    return list(unique_ingredients)
+
+def fetch_external_data(all_chunks):
+    """Fetch Wikipedia and news data for extracted ingredients."""
+    ingredients = extract_ingredients(all_chunks)
+    wiki_chunks = fetch_wikipedia_data(ingredients)
+    news_chunks = fetch_news_data(ingredients)
+    return wiki_chunks, news_chunks
 
 def chunk_text(text: str, chunk_size: int = 300, overlap: int = 50) -> list:
     words = text.split()

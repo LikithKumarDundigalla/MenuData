@@ -1,5 +1,5 @@
 import streamlit as st
-from data_processing import load_csv, process_data, fetch_wikipedia_data
+from data_processing import load_csv, process_data,fetch_external_data
 from embedding import build_faiss_index
 from agent import RetrievalAgent
 import warnings
@@ -20,19 +20,13 @@ def run():
 
     if uploaded_file and st.session_state.agent is None:
         df = load_csv(uploaded_file)
+        # CSV data is uploaded and mapped.
         all_chunks = process_data(df)
+        # as requested external data is retrieved
+        wiki_data, news_data = fetch_external_data(all_chunks)
+        index, metadata_store = build_faiss_index(all_chunks, wiki_data, news_data)
 
-        unique_ingredients = set()
-        for chunk in all_chunks:
-            if "ingredients" in chunk["metadata"]:
-                unique_ingredients.update(chunk["metadata"]["ingredients"].split(", "))
-
-        wiki_chunks = fetch_wikipedia_data(list(unique_ingredients))
-
-        # Build FAISS Index (Includes Wikipedia + Restaurant Data)
-        index, metadata_store = build_faiss_index(all_chunks + wiki_chunks)
-
-        # Initialize Retrieval Agent
+        # Retrieval Agent is initiated
         st.session_state.agent = RetrievalAgent(index, metadata_store)
 
     user_query = st.text_input("Enter your query:")
