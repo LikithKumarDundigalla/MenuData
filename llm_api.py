@@ -2,6 +2,8 @@ import json
 import requests
 from typing import List, Dict
 from retrieval import retrieve_relevant_chunks
+import warnings
+warnings.filterwarnings('ignore')
 
 def construct_prompt(query: str, retrieved_chunks: List[Dict]) -> str:
     context_lines = []
@@ -14,8 +16,9 @@ def construct_prompt(query: str, retrieved_chunks: List[Dict]) -> str:
     context_text = "\n".join(context_lines)
     prompt = (
             "You are a restaurant expert AI that integrates internal restaurant data with verified external sources. "
-            "Below is the context derived from our internal data. Use it to answer the user's query concisely and include inline source references. "
-            "Do not reveal any internal reasoning or chain-of-thought; provide only the final answer.\n\n"
+            "Below is the context derived from our internal data. Use it to generate a well-reasoned yet concise answer to the user's query, ensuring logical coherence and factual accuracy."
+            "Provide inline source references where applicable. Do not reveal any internal reasoning or chain-of-thought; provide only the final answer.\n\n"
+            "If there is no relevant context available, generate the most accurate response based on external sources and general knowledge.\n\n"
             "Context:\n" + context_text + "\n\n"
             "User Query: " + query + "\n\n"
             "Answer:"
@@ -51,3 +54,17 @@ def generate_answer(query: str, index, metadata_store, embedder) -> str:
         answer = "Sorry, I couldn't generate a response."
 
     return answer
+
+
+def analyze_query_intent(query):
+    url = "https://api.mistral.ai/v1/chat/completions"
+    headers = {
+        'Authorization': 'Bearer 9wYAB87lJfh0fkuPJuB33j33PXCkZ9Ic',
+        'Content-Type': 'application/json'
+    }
+    data = {"query": query}
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    if response.status_code == 200:
+        return response.json().get('categories', [])
+    else:
+        return []

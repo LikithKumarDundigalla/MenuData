@@ -1,5 +1,7 @@
 import numpy as np
 from typing import List, Dict
+import warnings
+warnings.filterwarnings('ignore')
 
 def retrieve_relevant_chunks(query: str, index, metadata_store, embedder, top_k: int = 5) -> List[Dict]:
     query_vec = embedder.encode([query])

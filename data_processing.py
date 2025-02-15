@@ -1,20 +1,18 @@
 import pandas as pd
 from io import StringIO
 from typing import List, Dict
-
+import wikipedia
 import streamlit as st
+import requests
+import warnings
+warnings.filterwarnings('ignore')
 
-# ------------------------------------------------------------------------------
-# Load CSV file
-# ------------------------------------------------------------------------------
+
 @st.cache_data
 def load_csv(uploaded_file) -> pd.DataFrame:
-    return pd.read_csv(StringIO(uploaded_file.getvalue().decode("utf-8")))
+   return pd.read_csv(StringIO(uploaded_file.getvalue().decode("utf-8")))
 
 
-# ------------------------------------------------------------------------------
-# Chunking Function
-# ------------------------------------------------------------------------------
 def chunk_text(text: str, chunk_size: int = 300, overlap: int = 50) -> list:
     words = text.split()
     chunks = []
@@ -27,9 +25,7 @@ def chunk_text(text: str, chunk_size: int = 300, overlap: int = 50) -> list:
     return chunks
 
 
-# ------------------------------------------------------------------------------
-# Process Data into Document Chunks
-# ------------------------------------------------------------------------------
+
 @st.cache_data
 def process_data(df: pd.DataFrame) -> List[Dict]:
     documents = []
@@ -71,3 +67,38 @@ def process_data(df: pd.DataFrame) -> List[Dict]:
                 "metadata": doc["metadata"]
             })
     return all_chunks
+
+@st.cache_data
+def fetch_wikipedia_data(item: List[str]) -> List[Dict]:
+    wiki_api = wikipedia.set_lang('en')
+    wiki_docs = []
+
+    for i in item:
+        page = wiki_api.page(i)
+        if page.exists():
+            wiki_docs.append({
+                "id": f"wiki_{i}",
+                "text": page.summary,
+                "metadata": {"source": "Wikipedia", "ingredient": i}
+            })
+
+    return wiki_docs
+
+
+def fetch_news_data(query):
+    api_key = '36076cb472d44740a7cbda95a98c783c'
+    url = f"https://newsapi.org/v2/everything?q={query}&apiKey={api_key}"
+    response = requests.get(url)
+    articles = response.json().get('articles', [])
+
+    news_data = []
+    for article in articles:
+        news_data.append({
+            "id": f"news_{article['title'].replace(' ', '_')}",
+            "text": f"{article['title']} - {article['description']}",
+            "metadata": {
+                "source": "News",
+                "url": article['url']
+            }
+        })
+    return news_data

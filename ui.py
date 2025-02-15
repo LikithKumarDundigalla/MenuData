@@ -1,39 +1,51 @@
 import streamlit as st
-from data_processing import load_csv, process_data
-from embedding import get_embedder, build_faiss_index
-from llm_api import generate_answer
+from data_processing import load_csv, process_data, fetch_wikipedia_data
+from embedding import build_faiss_index
+from agent import RetrievalAgent
+import warnings
+
+warnings.filterwarnings('ignore')
 
 def run():
-    """ Main function to run the Streamlit UI. """
     st.title("Restaurant Expert Chatbot")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
+    if "agent" not in st.session_state:
+        st.session_state.agent = None
+    if "response" not in st.session_state:
+        st.session_state.response = ""
 
-    uploaded_file = st.file_uploader("Upload the Menu Data CSV", type=["csv"])
-    if uploaded_file is None:
-        st.info("Please upload the CSV file.")
-        st.stop()
+    uploaded_file = st.file_uploader("Upload Restaurant Data (CSV)", type=["csv"])
 
-    df = load_csv(uploaded_file)
-    st.write("### Data Sample")
-    st.dataframe(df.head())
+    if uploaded_file and st.session_state.agent is None:
+        df = load_csv(uploaded_file)
+        all_chunks = process_data(df)
 
-    all_chunks = process_data(df)
-    index, metadata_store = build_faiss_index(all_chunks)
-    embedder = get_embedder()
+        unique_ingredients = set()
+        for chunk in all_chunks:
+            if "ingredients" in chunk["metadata"]:
+                unique_ingredients.update(chunk["metadata"]["ingredients"].split(", "))
 
-    st.markdown("---")
-    st.write("### Chat History")
-    for chat in st.session_state.chat_history:
-        st.markdown(f"**User:** {chat['user']}")
-        st.markdown(f"**Bot:** {chat['bot']}")
-        st.markdown("---")
+        wiki_chunks = fetch_wikipedia_data(list(unique_ingredients))
+
+        # Build FAISS Index (Includes Wikipedia + Restaurant Data)
+        index, metadata_store = build_faiss_index(all_chunks + wiki_chunks)
+
+        # Initialize Retrieval Agent
+        st.session_state.agent = RetrievalAgent(index, metadata_store)
 
     user_query = st.text_input("Enter your query:")
-    if st.button("Submit Query") and user_query:
-        answer = generate_answer(user_query, index, metadata_store, embedder)
-        st.session_state.chat_history.append({"user": user_query, "bot": answer})
+
+    def process_query():
+        if user_query and st.session_state.agent:
+            st.session_state.response = st.session_state.agent.handle_query(user_query)
+            st.session_state.chat_history.append({"user": user_query, "bot": st.session_state.response})
+
+    st.button("Submit Query", on_click=process_query)
+
+    if st.session_state.response:
+        st.write(st.session_state.response)
 
 if __name__ == "__main__":
     run()
