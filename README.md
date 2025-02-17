@@ -60,7 +60,7 @@ restaurant-chatbot/
 
 ## API Usage
 
-### 1. Getting Your Mistral.ai API Key
+### 1.Mistral.ai API Key
 1. Visit to the website [Mistral.ai](https://mistral.ai/en).
 2. Locate the option ```Try the API``` and click on it. 
 3. Sign up or log in at Mistral.ai
@@ -69,12 +69,30 @@ restaurant-chatbot/
 6. Copy the API key.
 
 The chatbot integrates with an LLM API for generating responses. Ensure your API key is correctly set in ``llm_api.py``:
-```
+```python
 headers = {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
-}
+        'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'Authorization': 'Bearer <YOUR_MISTRAL_API_KEY>',
+  'Cookie': '__cf_bm=ZtlKt96_PMs9oRwMM_TG_3_yO4Ux_W7L5xligFswDAo-1739421273-1.0.1.1-hZpK8g_ZnY.Wb9epx5grPcVedplnvcfROHD3EibkIPg181z.Z7SlOcqoG28VyKBDVggpMa0AybXvRV938dhq3w'
+    }
+```    
+```python    
+headers = {
+        'Authorization': 'Bearer <YOUR_MISTRAL_API_KEY>',
+        'Content-Type': 'application/json'
+    }
 ```
+
+### 2. NewsAPI API KEY
+This project also utilizes the **NewsAPI** to retrieve real-time news articles related to restaurant items, ingredients, or industry updates:
+
+1. **Sign up** at [NewsAPI.org](https://newsapi.org/) and generate an API key.  
+2. **Insert your key** in the relevant section of `data_processing.py` (or wherever you make the **NewsAPI** call):
+   ```python
+   api_key = 'YOUR_NEWSAPI_KEY'
+   url = f"https://newsapi.org/v2/everything?q={query}&apiKey={api_key}"
+
 To modify query processing, adjust the prompt construction in ``llm_api.py``.
 
 ## Future Improvements

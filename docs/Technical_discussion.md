@@ -1,6 +1,6 @@
 # Technical Design Document for Restaurant Chatbot
 
-![Flowchart.png](../Flowchart.png)
+![Flowchart.png](Flowchart.png)
 
 ---
 
