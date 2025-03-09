@@ -3,7 +3,12 @@ from data_processing import fetch_wikipedia_data, fetch_news_data
 from embedding import get_embedder
 from llm_api import generate_answer, analyze_query_intent
 import warnings
+import faiss
+import json
+import numpy as np
+
 warnings.filterwarnings('ignore')
+
 
 class RetrievalAgent:
     def __init__(self, index, metadata_store):
@@ -14,9 +19,7 @@ class RetrievalAgent:
     def search_faiss(self, query, top_k=10):
         query_vec = self.embedder.encode([query])
         distances, indices = self.index.search(np.array(query_vec, dtype=np.float32), top_k)
-
         retrieved = [self.metadata_store[idx] for idx in indices[0] if idx in self.metadata_store]
-
         return retrieved if retrieved else None
 
     def search_external_sources(self, query):
@@ -30,7 +33,6 @@ class RetrievalAgent:
 
         return combined_data if combined_data else [{"text": f"No direct info found for {query}."}]
 
-
     def update_faiss(self, new_data):
         new_texts = [chunk["text"] for chunk in new_data]
         new_embeddings = self.embedder.encode(new_texts)
@@ -41,8 +43,13 @@ class RetrievalAgent:
         for i, chunk in enumerate(new_data):
             self.metadata_store[num_existing_vectors + i] = chunk
 
-    def handle_query(self, query):
+        # Persist the updated FAISS index and metadata store.
+        faiss.write_index(self.index, "faiss_index.index")
+        with open("metadata_store.json", "w") as f:
+            json.dump({str(k): v for k, v in self.metadata_store.items()}, f,
+                      default=lambda o: int(o) if isinstance(o, np.int64) else o)
 
+    def handle_query(self, query):
         retrieved_chunks = self.search_faiss(query)
         if retrieved_chunks:
             return generate_answer(query, self.index, self.metadata_store, self.embedder)

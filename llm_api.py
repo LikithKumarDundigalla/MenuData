@@ -15,10 +15,10 @@ def construct_prompt(query: str, retrieved_chunks: List[Dict]) -> str:
         context_lines.append(f"{i}. {chunk['text']} {source_info}")
     context_text = "\n".join(context_lines)
     prompt = (
-            "You are a restaurant expert AI that integrates internal restaurant data with verified external sources. "
+            "You are a restaurant expert AI that integrates internal restaurant data with verified external sources focusing exclusively on San Fransisco. "
             "Below is the context derived from our internal data. Use it to generate a well-reasoned yet concise answer to the user's query, ensuring logical coherence and factual accuracy."
             "Provide inline source references where applicable. Do not reveal any internal reasoning or chain-of-thought; provide only the final answer.\n\n"
-            "If there is no relevant context available, generate the most accurate response based on external sources and general knowledge.\n\n"
+            "If there is no relevant context available, generate the most accurate response based on external sources and general knowledge, ensuring it pertains strictly to San Francisco.\n\n"
             "Context:\n" + context_text + "\n\n"
             "User Query: " + query + "\n\n"
             "Answer:"

@@ -1,6 +1,7 @@
 import streamlit as st
-from data_processing import load_csv, process_data, fetch_external_data
-from embedding import build_faiss_index
+import os
+import json
+import faiss
 from agent import RetrievalAgent
 import warnings
 
@@ -14,30 +15,33 @@ def run():
     if "agent" not in st.session_state:
         st.session_state.agent = None
 
-    uploaded_file = st.file_uploader("Upload Restaurant Data (CSV)", type=["csv"])
+    index_file = "faiss_index.index"
+    metadata_file = "metadata_store.json"
 
-    if uploaded_file and st.session_state.agent is None:
-        df = load_csv(uploaded_file)
-        all_chunks = process_data(df)
-        wiki_data, news_data = fetch_external_data(all_chunks)
-        index, metadata_store = build_faiss_index(all_chunks, wiki_data, news_data)
-        st.session_state.agent = RetrievalAgent(index, metadata_store)
+    # Load the persisted FAISS index and metadata.
+    if st.session_state.agent is None:
+        if os.path.exists(index_file) and os.path.exists(metadata_file):
+            index = faiss.read_index(index_file)
+            with open(metadata_file, "r") as f:
+                metadata_store_json = json.load(f)
+            metadata_store = {int(k): v for k, v in metadata_store_json.items()}
+            st.session_state.agent = RetrievalAgent(index, metadata_store)
+        else:
+            st.info("No persisted index found. Please run the embedding process to generate and save the FAISS index and metadata.")
 
-    # Display chat messages
+    # Display existing chat messages.
     for chat in st.session_state.chat_history:
         with st.chat_message("user"):
             st.write(chat["user"])
         with st.chat_message("bot"):
             st.write(chat["bot"])
 
-    # Chat input for user messages
+    # Chat input for user queries.
     user_query = st.chat_input("Ask me anything about restaurants!")
 
     if user_query and st.session_state.agent:
         response = st.session_state.agent.handle_query(user_query)
         st.session_state.chat_history.append({"user": user_query, "bot": response})
-
-        # Display the new messages immediately
         with st.chat_message("user"):
             st.write(user_query)
         with st.chat_message("bot"):
