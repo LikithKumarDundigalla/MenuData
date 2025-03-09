@@ -101,7 +101,7 @@ def fetch_wikipedia_data(item: List[str]) -> List[Dict]:
 
 
 def fetch_news_data(query):
-    api_key = '36076cb472d44740a7cbda95a98c783c'
+    api_key = '{NEWS_API_KEY}'
     url = f"https://newsapi.org/v2/everything?q={query}&apiKey={api_key}"
     response = requests.get(url)
     articles = response.json().get('articles', [])
