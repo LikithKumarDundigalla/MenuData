@@ -18,7 +18,7 @@ def run():
     index_file = "faiss_index.index"
     metadata_file = "metadata_store.json"
 
-    # Load the persisted FAISS index and metadata.
+
     if st.session_state.agent is None:
         if os.path.exists(index_file) and os.path.exists(metadata_file):
             index = faiss.read_index(index_file)
@@ -29,14 +29,14 @@ def run():
         else:
             st.info("No persisted index found. Please run the embedding process to generate and save the FAISS index and metadata.")
 
-    # Display existing chat messages.
+
     for chat in st.session_state.chat_history:
         with st.chat_message("user"):
             st.write(chat["user"])
         with st.chat_message("bot"):
             st.write(chat["bot"])
 
-    # Chat input for user queries.
+
     user_query = st.chat_input("Ask me anything about restaurants!")
 
     if user_query and st.session_state.agent:

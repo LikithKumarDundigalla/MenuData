@@ -20,7 +20,7 @@ def build_faiss_index(all_chunks, wiki_data, news_data: List[Dict]):
     index_file = "faiss_index.index"
     metadata_file = "metadata_store.json"
 
-    # If persistent index and metadata exist, try loading them.
+
     if os.path.exists(index_file) and os.path.exists(metadata_file):
         try:
             with open(metadata_file, "r") as f:
@@ -35,7 +35,7 @@ def build_faiss_index(all_chunks, wiki_data, news_data: List[Dict]):
             # Log the error if needed and continue to rebuild the index.
             print(f"Failed to load metadata from JSON: {e}. Rebuilding the index.")
 
-    # Build the index if not loaded from persistent storage.
+
     embedder = get_embedder()
     combined_chunks = all_chunks + wiki_data + news_data
     all_texts = [chunk["text"] for chunk in combined_chunks]
@@ -50,7 +50,7 @@ def build_faiss_index(all_chunks, wiki_data, news_data: List[Dict]):
     for i, chunk in enumerate(combined_chunks):
         metadata_store[i] = chunk
 
-    # Persist the FAISS index and metadata store.
+
     faiss.write_index(index, index_file)
     with open(metadata_file, "w") as f:
         json.dump({str(k): v for k, v in metadata_store.items()}, f,

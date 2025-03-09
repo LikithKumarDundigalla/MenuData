@@ -43,7 +43,7 @@ class RetrievalAgent:
         for i, chunk in enumerate(new_data):
             self.metadata_store[num_existing_vectors + i] = chunk
 
-        # Persist the updated FAISS index and metadata store.
+
         faiss.write_index(self.index, "faiss_index.index")
         with open("metadata_store.json", "w") as f:
             json.dump({str(k): v for k, v in self.metadata_store.items()}, f,
