@@ -3,7 +3,10 @@ import requests
 from typing import List, Dict
 from retrieval import retrieve_relevant_chunks
 import warnings
+import streamlit as st
 warnings.filterwarnings('ignore')
+
+MISTRALAI_KEY = st.secrets["MISTRALAI_KEY"]
 
 def construct_prompt(query: str, retrieved_chunks: List[Dict]) -> str:
     context_lines = []
@@ -43,7 +46,7 @@ def generate_answer(query: str, index, metadata_store, embedder) -> str:
     headers = {
         'Content-Type': 'application/json',
   'Accept': 'application/json',
-  'Authorization': 'Bearer 9wYAB87lJfh0fkuPJuB33j33PXCkZ9Ic',
+  'Authorization': 'Bearer {MISTRALAI_KEY}',
   'Cookie': '__cf_bm=ZtlKt96_PMs9oRwMM_TG_3_yO4Ux_W7L5xligFswDAo-1739421273-1.0.1.1-hZpK8g_ZnY.Wb9epx5grPcVedplnvcfROHD3EibkIPg181z.Z7SlOcqoG28VyKBDVggpMa0AybXvRV938dhq3w'
     }
     response = requests.request("POST", url, headers=headers, data=payload)
@@ -59,7 +62,7 @@ def generate_answer(query: str, index, metadata_store, embedder) -> str:
 def analyze_query_intent(query):
     url = "https://api.mistral.ai/v1/chat/completions"
     headers = {
-        'Authorization': 'Bearer 9wYAB87lJfh0fkuPJuB33j33PXCkZ9Ic',
+        'Authorization': 'Bearer {MISTRALAI_KEY}',
         'Content-Type': 'application/json'
     }
     data = {"query": query}
